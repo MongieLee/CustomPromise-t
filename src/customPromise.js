@@ -28,7 +28,7 @@ class CustomPromise {
   reason = undefined;
 
   successFn = [];
-  rejectFn = [];
+  failureFn = [];
 
   // 箭头函数的目的是绑定this为当前promise实例对象
   // 将状态更改为成功
@@ -36,6 +36,9 @@ class CustomPromise {
     if (this.status === PENDING) {
       this.status = FUFILLED;
       this.value = value;
+      if (this.successFn.length) {
+        this.successFn[0](this.value);
+      }
     }
   };
   // 将状态更改为失败
@@ -43,6 +46,9 @@ class CustomPromise {
     if (this.status === PENDING) {
       this.status = REJECTED;
       this.reason = reason;
+      if (this.failureFn.length) {
+        this.failureFn[0](this.reason);
+      }
     }
   };
 
@@ -51,13 +57,21 @@ class CustomPromise {
       onFulfilled(this.value);
     } else if (this.status === REJECTED) {
       onRejected(this.reason);
+    } else {
+      // 进入到else就是一直pending状态
+      // 将成功和失败回调存储
+      this.successFn.push(onFulfilled);
+      this.failureFn.push(onRejected);
     }
   };
 }
 
 const promise = new CustomPromise((resolve, reject) => {
   // resolve(1);
-  reject("failure");
+  // reject("failure");
+  setTimeout(() => {
+    resolve("haha");
+  }, 2000);
 });
 promise.then(
   (value) => {
