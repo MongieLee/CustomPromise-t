@@ -136,6 +136,25 @@ class CustomPromise {
     });
     return newPromise;
   };
+
+  static all(array) {
+    const result = [];
+    let rIndex = 0;
+    return new CustomPromise((resolve, reject) => {
+      const push = (index, value) => {
+        result[index] = value;
+        rIndex++;
+        if (rIndex === array.length) resolve(result);
+      };
+      array.forEach((item, index) => {
+        if (item instanceof CustomPromise) {
+          item.then((value) => push(index, value), reject);
+        } else {
+          push(index, item);
+        }
+      });
+    });
+  }
 }
 
 const promise = new Promise((resolve, reject) => {
@@ -203,3 +222,14 @@ function otherPromise() {
     resolve("other resolve ");
   });
 }
+function testPromise() {
+  return new CustomPromise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(123);
+    }, 3000);
+  });
+}
+CustomPromise.all([1, 2, testPromise(), 3]).then(
+  (a) => console.log({ a }),
+  (err) => console.log(err)
+);
