@@ -155,6 +155,11 @@ class CustomPromise {
       });
     });
   }
+
+  static resolve(value) {
+    if (value instanceof CustomPromise) return value;
+    return new CustomPromise((resolve) => resolve(value));
+  }
 }
 
 const promise = new Promise((resolve, reject) => {
@@ -230,6 +235,16 @@ function testPromise() {
   });
 }
 CustomPromise.all([1, 2, testPromise(), 3]).then(
+  (a) => console.log({ a }),
+  (err) => console.log(err)
+);
+
+CustomPromise.resolve(testPromise()).then(
+  (a) => console.log({ a }),
+  (err) => console.log(err)
+);
+
+CustomPromise.resolve(1).then(
   (a) => console.log({ a }),
   (err) => console.log(err)
 );
