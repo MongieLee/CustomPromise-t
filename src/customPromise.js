@@ -150,6 +150,10 @@ class CustomPromise {
     );
   };
 
+  catch = (callback) => {
+    return this.then(undefined, callback);
+  };
+
   static all(array) {
     const result = [];
     let rIndex = 0;
@@ -288,15 +292,14 @@ CustomPromise.all([1, 2, testPromise(), 3]).then(
 // );
 
 new CustomPromise((a, b) => {
-  a("哈哈哈");
-  // b("笑你妈");
+  // a("哈哈哈");
+  b("笑你妈");
 })
   .finally(() => {
     console.log("我肯定会执行");
-    return "测试测试his测试测试his测试测试his测试测试his";
     // return testPromise();
   })
-  .then(
-    (va) => console.log({ va }),
-    (ccc) => console.log({ ccc })
-  );
+  .then((va) => console.log({ va }))
+  .catch((err) => {
+    console.log("失败了哦");
+  });
