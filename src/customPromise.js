@@ -30,7 +30,11 @@ const resolvePromis = (newPromise, value, resolve, reject) => {
 
 class CustomPromise {
   constructor(executor) {
-    executor(this.resolve, this.reject);
+    try {
+      executor(this.resolve, this.reject);
+    } catch (err) {
+      this.reject(err);
+    }
   }
 
   // promise状态
@@ -51,7 +55,7 @@ class CustomPromise {
       this.status = FUFILLED;
       this.value = value;
       while (this.successFn.length) {
-        this.successFn.shift()(this.value);
+        this.successFn.shift()();
       }
     }
   };
@@ -61,30 +65,73 @@ class CustomPromise {
       this.status = REJECTED;
       this.reason = reason;
       while (this.failureFn.length) {
-        this.failureFn.shift()(this.reason);
+        this.failureFn.shift()();
       }
     }
   };
 
-  then = (onFulfilled, onRejected) => {
+  // 添加默认函数，合适.then().then()不传参数
+  then = (
+    onFulfilled = (v) => v,
+    onRejected = (e) => {
+      throw e;
+    }
+  ) => {
     let newPromise = new CustomPromise((resolve, reject) => {
+      // 这里的status是被调用then方法的promise对象的的status
+      // 也就是上一个promise
       if (this.status === FUFILLED) {
         // 判断返回值是promise对象还是其他
         // 如果是其他，直接调用resolve
         // 如果是promise对象，查看promise对象返回的结果
         // 再根据promise对象返回的结果，决定调用resolve还是调用reject
+
         setTimeout(() => {
-          let cbValue = onFulfilled(this.value);
-          // 需要添加一个宏任务，才能获取到newPromise
-          resolvePromis(newPromise, cbValue, resolve, reject);
+          try {
+            let cbValue = onFulfilled(this.value);
+            // 需要添加一个宏任务，才能获取到newPromise
+            resolvePromis(newPromise, cbValue, resolve, reject);
+          } catch (error) {
+            reject(error);
+          }
         }, 0);
       } else if (this.status === REJECTED) {
-        onRejected(this.reason);
+        setTimeout(() => {
+          try {
+            let err = onRejected(this.reason);
+            // 需要添加一个宏任务，才能获取到newPromise
+            resolvePromis(newPromise, err, resolve, reject);
+          } catch (error) {
+            reject(error);
+          }
+        }, 0);
       } else {
         // 进入到else就是一直pending状态
         // 将成功和失败回调存储
-        this.successFn.push(onFulfilled);
-        this.failureFn.push(onRejected);
+
+        this.successFn.push(() => {
+          setTimeout(() => {
+            try {
+              let cbValue = onFulfilled(this.value);
+              // 需要添加一个宏任务，才能获取到newPromise
+              resolvePromis(newPromise, cbValue, resolve, reject);
+            } catch (error) {
+              reject(error);
+            }
+          }, 0);
+        });
+
+        this.failureFn.push(() => {
+          setTimeout(() => {
+            try {
+              let err = onRejected(this.reason);
+              // 需要添加一个宏任务，才能获取到newPromise
+              resolvePromis(newPromise, err, resolve, reject);
+            } catch (error) {
+              reject(error);
+            }
+          }, 0);
+        });
       }
     });
     return newPromise;
@@ -129,17 +176,27 @@ console.log("------------CustomPromise-------------");
 // );
 
 const promise2 = new CustomPromise((resolve, reject) => {
-  resolve("测试");
-});
-let child = promise2.then((value) => {
-  console.log(value);
-  return child;
-});
-
-child.then(
-  (a) => console.log({ a }),
-  (b) => console.log({ b })
-);
+  // throw new Error("故意抛错");
+  // resolve("测试");
+  // reject("测试err");
+  setTimeout(() => {
+    // resolve("异步的");
+    reject("异步的");
+  }, 2000);
+})
+  .then()
+  .then()
+  .then(
+    (success) => {
+      // throw new Error("故意抛错2");
+      console.log({ success });
+    },
+    (err) => {
+      console.log("err", { err });
+      return 10000;
+    }
+  )
+  .then((v) => console.log(v));
 
 function otherPromise() {
   return new CustomPromise((resolve) => {
