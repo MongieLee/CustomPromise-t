@@ -36,8 +36,8 @@ class CustomPromise {
     if (this.status === PENDING) {
       this.status = FUFILLED;
       this.value = value;
-      if (this.successFn.length) {
-        this.successFn[0](this.value);
+      while (this.successFn.length) {
+        this.successFn.shift()(this.value);
       }
     }
   };
@@ -46,8 +46,8 @@ class CustomPromise {
     if (this.status === PENDING) {
       this.status = REJECTED;
       this.reason = reason;
-      if (this.failureFn.length) {
-        this.failureFn[0](this.reason);
+      while (this.failureFn.length) {
+        this.failureFn.shift()(this.reason);
       }
     }
   };
@@ -70,9 +70,28 @@ const promise = new CustomPromise((resolve, reject) => {
   // resolve(1);
   // reject("failure");
   setTimeout(() => {
-    resolve("haha");
+    // resolve("haha");
+    reject("fff");
   }, 2000);
 });
+promise.then(
+  (value) => {
+    console.log(value);
+  },
+  (reason) => {
+    console.log(reason);
+  }
+);
+
+promise.then(
+  (value) => {
+    console.log(value);
+  },
+  (reason) => {
+    console.log(reason);
+  }
+);
+
 promise.then(
   (value) => {
     console.log(value);
