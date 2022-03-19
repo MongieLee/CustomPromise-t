@@ -1,0 +1,21 @@
+{
+  "name": "fuck",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development webpack-dev-server --config ./webpack.config.dev.js --open",
+    "build": "webpack",
+    "jserver": "json-server --watch ./__json_server__/db.json"
+  },
+  "dependencies": {
+    "webpack": "^5.70.0",
+    "webpack-dev-server": "^4.7.4"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "html-webpack-plugin": "^5.5.0",
+    "json-server": "^0.17.0",
+    "webpack-cli": "^4.9.2"
+  }
+}
