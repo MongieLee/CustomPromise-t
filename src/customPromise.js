@@ -160,6 +160,11 @@ class CustomPromise {
     if (value instanceof CustomPromise) return value;
     return new CustomPromise((resolve) => resolve(value));
   }
+
+  static reject(value) {
+    if (value instanceof CustomPromise) return value;
+    return new CustomPromise((_, reject) => reject(value));
+  }
 }
 
 const promise = new Promise((resolve, reject) => {
@@ -234,6 +239,16 @@ function testPromise() {
     }, 3000);
   });
 }
+
+function testFailurePromise() {
+  return new CustomPromise((resolve, reject) => {
+    // setTimeout(() => {
+    //   reject("错了");
+    // }, 0);
+    reject("大错特错");
+  });
+}
+
 CustomPromise.all([1, 2, testPromise(), 3]).then(
   (a) => console.log({ a }),
   (err) => console.log(err)
@@ -245,6 +260,16 @@ CustomPromise.resolve(testPromise()).then(
 );
 
 CustomPromise.resolve(1).then(
+  (a) => console.log({ a }),
+  (err) => console.log(err)
+);
+
+CustomPromise.reject("你错了").then(
+  (a) => console.log({ a }),
+  (err) => console.log(err)
+);
+
+CustomPromise.reject(testFailurePromise()).then(
   (a) => console.log({ a }),
   (err) => console.log(err)
 );
