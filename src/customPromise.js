@@ -9,10 +9,24 @@
     reject: rejected
   4. then方法判断状态 成功调用resolve，失败调用reject
 */
-
 const FUFILLED = "fulfilled";
 const REJECTED = "rejected";
 const PENDING = "pending";
+
+// 解析返回值类型
+const resolvePromis = (newPromise, value, resolve, reject) => {
+  // 如果返回了当前Promise，抛出类型错误
+  if (newPromise === value) {
+    return reject(
+      new TypeError("Chaining cycle detected for promise #<Promise>")
+    );
+  }
+  if (value instanceof CustomPromise) {
+    value.then(resolve, reject);
+  } else {
+    resolve(value);
+  }
+};
 
 class CustomPromise {
   constructor(executor) {
@@ -53,51 +67,82 @@ class CustomPromise {
   };
 
   then = (onFulfilled, onRejected) => {
-    if (this.status === FUFILLED) {
-      onFulfilled(this.value);
-    } else if (this.status === REJECTED) {
-      onRejected(this.reason);
-    } else {
-      // 进入到else就是一直pending状态
-      // 将成功和失败回调存储
-      this.successFn.push(onFulfilled);
-      this.failureFn.push(onRejected);
-    }
+    let newPromise = new CustomPromise((resolve, reject) => {
+      if (this.status === FUFILLED) {
+        // 判断返回值是promise对象还是其他
+        // 如果是其他，直接调用resolve
+        // 如果是promise对象，查看promise对象返回的结果
+        // 再根据promise对象返回的结果，决定调用resolve还是调用reject
+        setTimeout(() => {
+          let cbValue = onFulfilled(this.value);
+          // 需要添加一个宏任务，才能获取到newPromise
+          resolvePromis(newPromise, cbValue, resolve, reject);
+        }, 0);
+      } else if (this.status === REJECTED) {
+        onRejected(this.reason);
+      } else {
+        // 进入到else就是一直pending状态
+        // 将成功和失败回调存储
+        this.successFn.push(onFulfilled);
+        this.failureFn.push(onRejected);
+      }
+    });
+    return newPromise;
   };
 }
 
-const promise = new CustomPromise((resolve, reject) => {
+const promise = new Promise((resolve, reject) => {
   // resolve(1);
   // reject("failure");
-  setTimeout(() => {
-    // resolve("haha");
-    reject("fff");
-  }, 2000);
+  resolve("haha");
 });
-promise.then(
-  (value) => {
+promise
+  .then((value) => {
     console.log(value);
-  },
-  (reason) => {
-    console.log(reason);
-  }
-);
+    return otherPromise();
+  })
+  .then(
+    (a) => console.log({ a }),
+    (b) => console.log(b)
+  );
 
-promise.then(
-  (value) => {
-    console.log(value);
-  },
-  (reason) => {
-    console.log(reason);
-  }
-);
+function otherPromise() {
+  return new CustomPromise((resolve) => {
+    resolve("other resolve ");
+  });
+}
 
-promise.then(
-  (value) => {
-    console.log(value);
-  },
-  (reason) => {
-    console.log(reason);
-  }
-);
 console.log("------------CustomPromise-------------");
+
+// 会报循环调用错误
+// const p1 = new Promise((a, b) => {
+//   a("chengognle");
+// });
+// p2 = p1.then((res) => {
+//   console.log(res);
+//   return p2;
+// });
+
+// p2.then(
+//   () => {},
+//   (err) => console.log(err.message)
+// );
+
+const promise2 = new CustomPromise((resolve, reject) => {
+  resolve("测试");
+});
+let child = promise2.then((value) => {
+  console.log(value);
+  return child;
+});
+
+child.then(
+  (a) => console.log({ a }),
+  (b) => console.log({ b })
+);
+
+function otherPromise() {
+  return new CustomPromise((resolve) => {
+    resolve("other resolve ");
+  });
+}
