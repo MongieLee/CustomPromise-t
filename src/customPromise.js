@@ -137,6 +137,19 @@ class CustomPromise {
     return newPromise;
   };
 
+  finally = (callback) => {
+    return this.then(
+      (value) => {
+        return CustomPromise.resolve(callback()).then(() => value);
+      },
+      (reason) => {
+        throw CustomPromise.resolve(callback()).then(() => {
+          throw reason;
+        });
+      }
+    );
+  };
+
   static all(array) {
     const result = [];
     let rIndex = 0;
@@ -254,22 +267,36 @@ CustomPromise.all([1, 2, testPromise(), 3]).then(
   (err) => console.log(err)
 );
 
-CustomPromise.resolve(testPromise()).then(
-  (a) => console.log({ a }),
-  (err) => console.log(err)
-);
+// CustomPromise.resolve(testPromise()).then(
+//   (a) => console.log({ a }),
+//   (err) => console.log(err)
+// );
 
-CustomPromise.resolve(1).then(
-  (a) => console.log({ a }),
-  (err) => console.log(err)
-);
+// CustomPromise.resolve(1).then(
+//   (a) => console.log({ a }),
+//   (err) => console.log(err)
+// );
 
-CustomPromise.reject("你错了").then(
-  (a) => console.log({ a }),
-  (err) => console.log(err)
-);
+// CustomPromise.reject("你错了").then(
+//   (a) => console.log({ a }),
+//   (err) => console.log(err)
+// );
 
-CustomPromise.reject(testFailurePromise()).then(
-  (a) => console.log({ a }),
-  (err) => console.log(err)
-);
+// CustomPromise.reject(testFailurePromise()).then(
+//   (a) => console.log({ a }),
+//   (err) => console.log(err)
+// );
+
+new CustomPromise((a, b) => {
+  a("哈哈哈");
+  // b("笑你妈");
+})
+  .finally(() => {
+    console.log("我肯定会执行");
+    return "测试测试his测试测试his测试测试his测试测试his";
+    // return testPromise();
+  })
+  .then(
+    (va) => console.log({ va }),
+    (ccc) => console.log({ ccc })
+  );
