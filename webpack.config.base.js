@@ -1,7 +1,7 @@
 const path = require("path");
 
 module.exports = {
-  entry: "./src/main.js",
+  entry: "./src/customPromise.js",
   output: {
     path: path.resolve(__dirname, "dist"),
   },

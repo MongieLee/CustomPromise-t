@@ -173,6 +173,18 @@ class CustomPromise {
     });
   }
 
+  static race(array) {
+    return new CustomPromise((resolve, reject) => {
+      array.forEach((item) => {
+        if (item instanceof CustomPromise) {
+          item.then(resolve, reject);
+        } else {
+          resolve(item);
+        }
+      });
+    });
+  }
+
   static resolve(value) {
     if (value instanceof CustomPromise) return value;
     return new CustomPromise((resolve) => resolve(value));
@@ -184,122 +196,28 @@ class CustomPromise {
   }
 }
 
-const promise = new Promise((resolve, reject) => {
-  // resolve(1);
-  // reject("failure");
-  resolve("haha");
-});
-promise
-  .then((value) => {
-    console.log(value);
-    return otherPromise();
-  })
-  .then(
-    (a) => console.log({ a }),
-    (b) => console.log(b)
-  );
-
 function otherPromise() {
   return new CustomPromise((resolve) => {
-    resolve("other resolve ");
+    setTimeout(() => {
+      resolve("Chenggongle");
+    }, 2000);
   });
 }
 
-console.log("------------CustomPromise-------------");
-
-// 会报循环调用错误
-// const p1 = new Promise((a, b) => {
-//   a("chengognle");
-// });
-// p2 = p1.then((res) => {
-//   console.log(res);
-//   return p2;
-// });
-
-// p2.then(
-//   () => {},
-//   (err) => console.log(err.message)
-// );
-
-const promise2 = new CustomPromise((resolve, reject) => {
-  // throw new Error("故意抛错");
-  // resolve("测试");
-  // reject("测试err");
-  setTimeout(() => {
-    // resolve("异步的");
-    reject("异步的");
-  }, 2000);
-})
-  .then()
-  .then()
-  .then(
-    (success) => {
-      // throw new Error("故意抛错2");
-      console.log({ success });
-    },
-    (err) => {
-      console.log("err", { err });
-      return 10000;
-    }
-  )
-  .then((v) => console.log(v));
-
-function otherPromise() {
-  return new CustomPromise((resolve) => {
-    resolve("other resolve ");
-  });
-}
-function testPromise() {
+function otherPromise2() {
   return new CustomPromise((resolve, reject) => {
     setTimeout(() => {
-      resolve(123);
-    }, 3000);
+      // resolve("2222");
+      reject("new Error");
+    }, 1100);
   });
 }
 
-function testFailurePromise() {
-  return new CustomPromise((resolve, reject) => {
-    // setTimeout(() => {
-    //   reject("错了");
-    // }, 0);
-    reject("大错特错");
-  });
-}
-
-CustomPromise.all([1, 2, testPromise(), 3]).then(
-  (a) => console.log({ a }),
-  (err) => console.log(err)
+CustomPromise.race([otherPromise(), otherPromise2()]).then(
+  (res) => {
+    console.log("陈工的值" + res);
+  },
+  (err) => {
+    console.log("失败了" + err);
+  }
 );
-
-// CustomPromise.resolve(testPromise()).then(
-//   (a) => console.log({ a }),
-//   (err) => console.log(err)
-// );
-
-// CustomPromise.resolve(1).then(
-//   (a) => console.log({ a }),
-//   (err) => console.log(err)
-// );
-
-// CustomPromise.reject("你错了").then(
-//   (a) => console.log({ a }),
-//   (err) => console.log(err)
-// );
-
-// CustomPromise.reject(testFailurePromise()).then(
-//   (a) => console.log({ a }),
-//   (err) => console.log(err)
-// );
-
-new CustomPromise((a, b) => {
-  // a("哈哈哈");
-  b("笑你妈");
-})
-  .finally(() => {
-    console.log("我肯定会执行");
-    // return testPromise();
-  })
-  .then((va) => console.log({ va }))
-  .catch((err) => {
-    console.log("失败了哦");
-  });

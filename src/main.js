@@ -106,21 +106,18 @@ function* foo() {
 const genrator = foo();
 // 此时不会执行，只是得到了生成器对象
 
-const result = genrator.next();
+// const result = genrator.next();
 // 调用next才会执行函数体
 // 会得到yield返回的值，会被包装成一个对象
 // {value:"run",done:false},done表示是否完成状态
-console.log(result);
 
-const result2 = genrator.next("fuck");
-console.log(result2);
+// const result2 = genrator.next("fuck");
 // 再次执行next，"fuck"字符串会作为yield语句的返回值
 
 // genrator.throw(new Error("custom error"));
 // 抛出异常
 
 // 函数生成器
-console.log("-----------------");
 function* main() {
   try {
     const result1 = yield ajax("http://localhost:3000/user");
